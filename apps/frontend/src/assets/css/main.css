@@ -1,0 +1,10 @@
+@import 'tailwindcss';
+@plugin "@tailwindcss/typography";
+
+u {
+  @apply text-lg;
+}
+
+/* p {
+  @apply;
+} */
