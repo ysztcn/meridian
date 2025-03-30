@@ -4,5 +4,11 @@
   "private": true,
   "publishConfig": {
     "access": "public"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Iliane Amadou",
+    "email": "mail@iliane.xyz",
+    "url": "https://iliane.xyz"
   }
 }
