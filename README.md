@@ -8,7 +8,7 @@
 Meridian cuts through news noise by scraping hundreds of sources, analyzing stories with AI, and delivering concise, personalized daily briefs.
 
 <p align="center">
-  <img src="path/to/your/screenshot.png" alt="Meridian Brief Example" width="700"/>
+  <img src="./screenshot.png" alt="Meridian Brief Example" width="700"/>
 </p>
 
 ## Why It Exists
