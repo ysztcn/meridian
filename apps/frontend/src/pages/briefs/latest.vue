@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const config = useRuntimeConfig();
 const reports = useReports();
 
 // redirect to the latest report
@@ -12,11 +13,12 @@ if (latestReport) {
   });
 }
 
-useSeoMeta({
+useSEO({
   title: 'latest report | meridian',
-  description: 'my personal intelligence agency',
-  ogTitle: 'latest report | meridian',
-  ogDescription: 'my personal intelligence agency',
+  description:
+    'a daily brief of everything important happening that i care about, with actual analysis beyond headlines',
+  ogImage: `${config.public.WORKER_API}/og/default`,
+  ogUrl: `https://news.iliane.xyz/latest`,
 });
 </script>
 

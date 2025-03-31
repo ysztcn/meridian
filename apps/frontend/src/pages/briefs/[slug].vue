@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+const config = useRuntimeConfig();
 const { $md } = useNuxtApp();
 
 // Constants
@@ -15,6 +16,8 @@ if (slug === undefined) {
 }
 
 const briefData = getReportBySlug(slug);
+
+const url = ref(`/`);
 
 // Reading progress state
 const readingProgress = ref(0);
@@ -39,11 +42,11 @@ const formatDate = computed(() => {
   return date ? `${date.month.toLowerCase()} ${date.day}, ${date.year}` : '';
 });
 
-useSeoMeta({
+useSEO({
   title: `${briefData.value.title.toLowerCase()} | meridian`,
   description: `brief for ${formatDate.value}`,
-  ogTitle: `${briefData.value.title.toLowerCase()} | meridian`,
-  ogDescription: `brief for ${formatDate.value}`,
+  ogImage: `${config.public.WORKER_API}/openGraph/brief?title=${encodeURIComponent(briefData.value.title)}&date=${encodeURIComponent(briefData.value.createdAt.getTime())}&articles=${briefData.value.usedArticles}&sources=${briefData.value.usedSources}`,
+  ogUrl: `https://news.iliane.xyz/briefs/${slug}`,
 });
 
 // Lifecycle hooks

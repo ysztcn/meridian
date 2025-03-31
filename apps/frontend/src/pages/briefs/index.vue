@@ -1,11 +1,12 @@
 <script setup lang="ts">
 const reports = useReports();
+const config = useRuntimeConfig();
 
-useSeoMeta({
+useSEO({
   title: 'briefs | meridian',
-  description: 'my personal intelligence agency',
-  ogTitle: 'briefs | meridian',
-  ogDescription: 'my personal intelligence agency',
+  description: 'list of all briefs',
+  ogImage: `${config.public.WORKER_API}/og/default`,
+  ogUrl: `https://news.iliane.xyz/briefs`,
 });
 </script>
 

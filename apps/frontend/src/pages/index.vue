@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const { $md } = useNuxtApp();
+const config = useRuntimeConfig();
 
 const text = ref(
   `
@@ -30,11 +31,12 @@ just what's happening and why it matters. no middleman deciding what reaches me.
 `.trim()
 );
 
-useSeoMeta({
+useSEO({
   title: 'home | meridian',
-  description: 'my personal intelligence agency',
-  ogTitle: 'home | meridian',
-  ogDescription: 'my personal intelligence agency',
+  description:
+    'a daily brief of everything important happening that i care about, with actual analysis beyond headlines',
+  ogImage: `${config.public.WORKER_API}/openGraph/default`,
+  ogUrl: `https://news.iliane.xyz/`,
 });
 </script>
 
