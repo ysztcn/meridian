@@ -73,7 +73,7 @@ graph TD
 **Prerequisites**: Node.js v22+, pnpm v9.15+, Python 3.10+, PostgreSQL, Cloudflare account, Google AI API key
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/meridian.git
+git clone https://github.com/iliane5/meridian.git
 cd meridian
 pnpm install
 # Configure .env files
