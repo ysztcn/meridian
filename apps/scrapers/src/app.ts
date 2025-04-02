@@ -5,6 +5,7 @@ import { Hono } from 'hono';
 import { trimTrailingSlash } from 'hono/trailing-slash';
 import openGraph from './routers/openGraph.router';
 import reportsRouter from './routers/reports.router';
+import { startRssFeedScraperWorkflow } from './workflows/rssFeed.workflow';
 
 export type HonoEnv = { Bindings: Env };
 
@@ -83,6 +84,19 @@ const app = new Hono<HonoEnv>()
     };
 
     return c.json(response);
+  })
+  .get('/trigger-rss', async c => {
+    const token = c.req.query('token');
+    if (token !== c.env.MERIDIAN_SECRET_KEY) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    const res = await startRssFeedScraperWorkflow(c.env);
+    if (res.isErr()) {
+      return c.json({ error: res.error }, 500);
+    }
+
+    return c.json({ success: true });
   });
 
 export default app;
