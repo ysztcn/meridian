@@ -21,7 +21,7 @@ const getBriefOpenGraph = (opts: { title: string; date: Date; totalArticles: num
   >
     <div style="right: 42px; top: 42px; position: absolute; display: flex; align-items: center">
       <span style="margin-left: 8px; font-size: 25px; font-weight: normal; letter-spacing: normal">
-        ${opts.date.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
+        ${opts.date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
       </span>
     </div>
 
