@@ -109,6 +109,7 @@ a:hover {
 /* Prose styles customized for each theme */
 .prose {
   color: var(--color); /* Use main text color variable */
+  max-width: 100%;
 }
 
 .prose a {

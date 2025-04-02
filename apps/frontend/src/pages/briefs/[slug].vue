@@ -71,7 +71,7 @@ onUnmounted(() => {
   <div>
     <header class="mb-8">
       <h1 class="text-4xl font-bold mb-3">
-        {{ briefData.title.toLowerCase() }}
+        {{ briefData.title }}
       </h1>
       <div class="flex text-sm text-gray-600 items-center space-x-2">
         <time>{{ briefData.date?.month.toLowerCase() }} {{ briefData.date?.day }}, {{ briefData.date?.year }}</time>
@@ -80,7 +80,7 @@ onUnmounted(() => {
       </div>
     </header>
 
-    <article class="prose" v-html="$md.render(briefData.content)" />
+    <article class="prose text-justify w-full" v-html="$md.render(briefData.content)" />
 
     <div class="mt-16 mb-8">
       <div class="h-px w-full bg-gray-300 mb-8" />
