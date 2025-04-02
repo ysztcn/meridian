@@ -19,7 +19,7 @@ const dbStepConfig: WorkflowStepConfig = {
 export class ProcessArticles extends WorkflowEntrypoint<Env, Params> {
   async run(_event: WorkflowEvent<Params>, step: WorkflowStep) {
     const env = this.env;
-    const db = getDb(env);
+    const db = getDb(env.DATABASE_URL);
     const google = createGoogleGenerativeAI({ apiKey: env.GOOGLE_API_KEY, baseURL: env.GOOGLE_BASE_URL });
 
     async function getUnprocessedArticles(opts: { limit?: number }) {
