@@ -1,10 +1,11 @@
 <script lang="ts" setup>
+import SubscriptionForm from '../../components/SubscriptionForm.vue';
+
 const config = useRuntimeConfig();
 const { $md } = useNuxtApp();
 
 // Constants
 const WORDS_PER_MINUTE = 300;
-const STORAGE_KEY = 'meridian_subscribed';
 
 // Route and brief data extraction
 const slug = useRoute().path.split('/').pop()?.replaceAll('_', '/');
@@ -22,11 +23,6 @@ const url = ref(`/`);
 // Reading progress state
 const readingProgress = ref(0);
 let scrollListener: () => void;
-
-// Subscription state
-const email = ref('');
-const isSubmitting = ref(false);
-const hasSubscribed = ref(false);
 
 /**
  * Calculates estimated reading time in minutes
@@ -51,9 +47,6 @@ useSEO({
 
 // Lifecycle hooks
 onMounted(() => {
-  // Check subscription status
-  hasSubscribed.value = localStorage.getItem(STORAGE_KEY) === 'true';
-
   // Initialize scroll progress tracking
   scrollListener = () => {
     const scrollTop = document.documentElement.scrollTop;
@@ -67,38 +60,6 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('scroll', scrollListener);
 });
-
-/**
- * Subscription form handlers
- */
-const handleSubmit = async () => {
-  isSubmitting.value = true;
-
-  try {
-    const response = await $fetch('/api/subscribe', {
-      method: 'POST',
-      body: { email: email.value },
-    });
-
-    if (!response.success) {
-      throw new Error(response.message || 'Failed to subscribe');
-    }
-
-    email.value = '';
-    hasSubscribed.value = true;
-    localStorage.setItem(STORAGE_KEY, 'true');
-  } catch (error) {
-    alert('Something went wrong, please try again.');
-    console.error('Subscription error:', error);
-  } finally {
-    isSubmitting.value = false;
-  }
-};
-
-const handleChangeEmail = () => {
-  hasSubscribed.value = false;
-  localStorage.removeItem(STORAGE_KEY);
-};
 </script>
 
 <template>
@@ -150,28 +111,8 @@ const handleChangeEmail = () => {
         </div>
 
         <!-- Subscription area -->
-        <div v-if="!hasSubscribed" class="mt-4 pt-8 border-t border-gray-300">
-          <p class="text-gray-800 mb-4">Want this brief in your inbox? Sign up for updates</p>
-          <form @submit.prevent="handleSubmit" class="flex max-w-md mx-auto">
-            <input
-              v-model="email"
-              type="email"
-              placeholder="your@email.com"
-              required
-              class="flex-grow px-4 py-2 border border-r-0 border-gray-300 focus:outline-none focus:ring-1 focus:ring-black"
-            />
-            <button
-              type="submit"
-              class="bg-black text-white px-4 py-2 font-medium hover:bg-gray-800 transition-colors"
-              :disabled="isSubmitting"
-            >
-              {{ isSubmitting ? 'Sending...' : 'Subscribe' }}
-            </button>
-          </form>
-        </div>
-        <div v-else class="mt-4 pt-8 border-t border-gray-300 text-sm">
-          <p class="text-gray-800">You're subscribed to our updates!</p>
-          <button @click="handleChangeEmail" class="text-gray-500 underline mt-2 text-xs">Change email</button>
+        <div class="mt-4 pt-8 border-t border-gray-300">
+          <SubscriptionForm />
         </div>
       </div>
     </div>

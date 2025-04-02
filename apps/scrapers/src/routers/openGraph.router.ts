@@ -20,19 +20,19 @@ const getBriefOpenGraph = (opts: { title: string; date: Date; totalArticles: num
     "
   >
     <div style="right: 42px; top: 42px; position: absolute; display: flex; align-items: center">
-      <span style="margin-left: 8px; font-size: 20px; font-weight: normal; letter-spacing: normal">
+      <span style="margin-left: 8px; font-size: 25px; font-weight: normal; letter-spacing: normal">
         ${opts.date.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
       </span>
     </div>
 
     <div style="left: 42px; bottom: 42px; position: absolute; display: flex; align-items: center">
-      <span style="margin-left: 8px; font-size: 20px; font-weight: normal; letter-spacing: normal">
+      <span style="margin-left: 8px; font-size: 25px; font-weight: normal; letter-spacing: normal">
         Intelligence brief · ${opts.totalArticles} articles · ${opts.totalSources} sources
       </span>
     </div>
 
     <div style="right: 42px; bottom: 42px; position: absolute; display: flex; align-items: center">
-      <span style="margin-left: 8px; font-size: 20px; font-weight: normal; letter-spacing: normal"> news.iliane.xyz </span>
+      <span style="margin-left: 8px; font-size: 25px; font-weight: normal; letter-spacing: normal"> news.iliane.xyz </span>
     </div>
 
     <div
@@ -42,9 +42,9 @@ const getBriefOpenGraph = (opts: { title: string; date: Date; totalArticles: num
         justify-content: center;
         padding: 10px 25px;
         margin: 0 42px;
-        font-size: 40px;
+        font-size: 60px;
         width: auto;
-        max-width: 600px;
+        max-width: 1000px;
         text-align: center;
         background-color: white;
         color: black;
@@ -78,7 +78,7 @@ const getHomeOpenGraph = () => `
         justify-content: center;
         padding: 10px 25px;
         margin: 0 42px;
-        font-size: 40px;
+        font-size: 110px;
         width: auto;
         max-width: 600px;
         text-align: center;
@@ -97,9 +97,9 @@ const getHomeOpenGraph = () => `
         justify-content: center;
         padding: 10px 25px;
         margin: 0 42px;
-        font-size: 20px;
+        font-size: 35px;
         width: auto;
-        max-width: 600px;
+        max-width: 900px;
         text-align: center;
         background-color: white;
         color: black;

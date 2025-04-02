@@ -41,4 +41,12 @@ export default defineNuxtConfig({
       autoSubfolderIndex: false,
     },
   },
+
+  modules: ['@nuxtjs/color-mode'],
+
+  colorMode: {
+    classSuffix: '',
+    preference: 'system',
+    fallback: 'system',
+  },
 });
