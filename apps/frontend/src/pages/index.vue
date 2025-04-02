@@ -59,7 +59,7 @@ onMounted(() => {
     <div class="prose" v-html="$md.render(text)" />
 
     <!-- Subscription area -->
-    <div class="pt-4 border-t border-gray-300">
+    <div class="mt-4 pt-8 pb-6 border-t border-gray-300">
       <SubscriptionForm />
     </div>
   </div>
