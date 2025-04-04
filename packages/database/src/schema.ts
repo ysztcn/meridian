@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { integer, jsonb, pgTable, serial, text, timestamp } from 'drizzle-orm/pg-core';
+import { boolean, integer, jsonb, pgTable, serial, text, timestamp } from 'drizzle-orm/pg-core';
 
 /**
  * Note: We use $ to denote the table objects
@@ -11,6 +11,7 @@ export const $sources = pgTable('sources', {
   url: text('url').notNull().unique(),
   name: text('name').notNull(),
   scrape_frequency: integer('scrape_frequency').notNull().default(2), // 1=hourly, 2=4hrs, 3=6hrs, 4=daily
+  paywall: boolean('paywall').notNull().default(false),
   category: text('category').notNull(),
   lastChecked: timestamp('last_checked', { mode: 'date' }),
 });

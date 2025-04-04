@@ -71,6 +71,13 @@
       "when": 1743347554514,
       "tag": "0009_chubby_ricochet",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1743749790094,
+      "tag": "0010_brave_lorna_dane",
+      "breakpoints": true
     }
   ]
 }

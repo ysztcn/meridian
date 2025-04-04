@@ -68,7 +68,18 @@ export class ProcessArticles extends WorkflowEntrypoint<Env, Params> {
       publishedTime?: string;
     }> = [];
 
-    const trickyDomains = ['reuters.com', 'nytimes.com'];
+    const trickyDomains = [
+      'reuters.com',
+      'nytimes.com',
+      'politico.com',
+      'science.org',
+      'alarabiya.net',
+      'reason.com',
+      'telegraph.co.uk',
+      'lawfaremedia',
+      'liberation.fr',
+      'france24.com',
+    ];
 
     // Process articles with rate limiting
     const articleResults = await rateLimiter.processBatch(articles, step, async (article, domain) => {
