@@ -6,6 +6,8 @@ import { trimTrailingSlash } from 'hono/trailing-slash';
 import openGraph from './routers/openGraph.router';
 import reportsRouter from './routers/reports.router';
 import { startRssFeedScraperWorkflow } from './workflows/rssFeed.workflow';
+import { getRssFeedWithFetch } from './lib/puppeteer';
+import { parseRSSFeed } from './lib/parsers';
 
 export type HonoEnv = { Bindings: Env };
 
@@ -91,12 +93,33 @@ const app = new Hono<HonoEnv>()
       return c.json({ error: 'Unauthorized' }, 401);
     }
 
-    const res = await startRssFeedScraperWorkflow(c.env);
+    const res = await startRssFeedScraperWorkflow(c.env, { force: true });
     if (res.isErr()) {
       return c.json({ error: res.error }, 500);
     }
 
     return c.json({ success: true });
+  })
+  .get('/test/rss', async c => {
+    const url = 'https://www.science.org/action/showFeed?type=etoc&feed=rss&jc=science';
+    const now = Date.now();
+    const oneWeekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
+
+    const feedPage = await getRssFeedWithFetch(url);
+    if (feedPage.isErr()) {
+      console.error(`Error fetching feed ${url}: ${feedPage.error.type}`);
+      throw feedPage.error;
+    }
+
+    const feedArticles = await parseRSSFeed(feedPage.value);
+    if (feedArticles.isErr()) {
+      console.error(`Error parsing feed ${url}: ${feedArticles.error.type}`);
+      throw feedArticles.error;
+    }
+
+    return c.json(
+      feedArticles.value.filter(({ pubDate }) => pubDate === null || pubDate > oneWeekAgo).map(e => ({ ...e }))
+    );
   });
 
 export default app;
