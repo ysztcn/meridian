@@ -37,6 +37,7 @@ const tocItems = ref<TocItem[]>([]);
 const articleContentRef = ref<HTMLElement | null>(null);
 const activeHeadingId = ref<string | null>(null);
 const mobileMenuOpen = ref(false);
+const currentSectionName = ref<string>('on this page');
 
 const generateSlug = (text: string): string => {
   return text
@@ -95,6 +96,10 @@ const scrollToSection = (id: string) => {
   }
 };
 
+const scrollToTop = () => {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
 // SEO metadata
 const formatDate = computed(() => {
   // Add safety checks for briefData and date
@@ -116,13 +121,52 @@ useSeoMeta({
   twitterCard: 'summary_large_image',
 });
 
-// --- Lifecycle Hooks ---
+// Add this function near the other TOC-related functions
+const updateCurrentSection = (headingId: string | null) => {
+  if (!headingId) {
+    currentSectionName.value = 'on this page';
+    return;
+  }
+
+  // Find the current section or topic
+  const section = tocItems.value.find(item => {
+    if (item.id === headingId) return true;
+    // For topics, check if they're under a section
+    if (item.level > 3) {
+      const parentSection = tocItems.value.find(section => section.level <= 3 && section.id === headingId);
+      return parentSection !== undefined;
+    }
+    return false;
+  });
+
+  currentSectionName.value = section ? section.text.toLowerCase() : 'on this page';
+};
+
+// Update the watch for activeHeadingId
+watch(
+  () => activeHeadingId.value,
+  newId => {
+    updateCurrentSection(newId);
+  },
+  { immediate: true }
+);
+
+// Add these refs with the other state management
+const headerRef = ref<HTMLElement | null>(null);
+const mobileTocRef = ref<HTMLElement | null>(null);
+const isSticky = ref(false);
+const showBackToTop = ref(false);
+
+// Add this with the other lifecycle hooks
 onMounted(() => {
   // Scroll progress tracking
   scrollListener = () => {
     const scrollTop = document.documentElement.scrollTop;
     const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
     readingProgress.value = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
+
+    // Show back to top button after scrolling down 500px
+    showBackToTop.value = scrollTop > 500;
   };
   window.addEventListener('scroll', scrollListener);
 
@@ -130,10 +174,24 @@ onMounted(() => {
   nextTick(() => {
     generateToc();
   });
-});
 
-onUnmounted(() => {
-  window.removeEventListener('scroll', scrollListener);
+  // Setup intersection observer for sticky behavior
+  const observer = new IntersectionObserver(
+    ([entry]) => {
+      isSticky.value = !entry.isIntersecting;
+    },
+    { threshold: 0 }
+  );
+
+  if (headerRef.value) {
+    observer.observe(headerRef.value);
+  }
+
+  // Cleanup
+  onUnmounted(() => {
+    window.removeEventListener('scroll', scrollListener);
+    observer.disconnect();
+  });
 });
 </script>
 
@@ -151,54 +209,10 @@ onUnmounted(() => {
   <div class="mx-[-1.5rem] w-[calc(100%+3rem)] relative">
     <!-- Inner container to reapply the proper padding -->
     <div class="max-w-3xl mx-auto px-6">
-      <!-- Mobile TOC (Only visible on small screens) -->
-      <div class="xl:hidden mb-8">
-        <button
-          @click="mobileMenuOpen = !mobileMenuOpen"
-          class="flex items-center justify-between w-full px-4 py-2 text-sm font-semibold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-150"
-        >
-          <span>On this page</span>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-            class="w-4 h-4 transform transition-transform duration-200"
-            :class="{ 'rotate-180': mobileMenuOpen }"
-          >
-            <path
-              fill-rule="evenodd"
-              d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
-              clip-rule="evenodd"
-            />
-          </svg>
-        </button>
-        <Transition
-          enter-active-class="transition-all duration-200 ease-out"
-          leave-active-class="transition-all duration-150 ease-in"
-          @enter="el => (el.style.height = el.scrollHeight + 'px')"
-          @leave="el => (el.style.height = '0px')"
-          @before-enter="el => (el.style.height = '0px')"
-          @after-enter="el => (el.style.height = 'auto')"
-        >
-          <div v-if="mobileMenuOpen" class="mt-2 overflow-hidden">
-            <BriefTableOfContents
-              :items="tocItems"
-              :active-heading-id="activeHeadingId"
-              @navigate="
-                id => {
-                  scrollToSection(id);
-                  mobileMenuOpen = false;
-                }
-              "
-              @active-heading-change="activeHeadingId = $event"
-            />
-          </div>
-        </Transition>
-      </div>
-
       <!-- Main Content Column -->
       <div>
-        <header class="mb-8">
+        <!-- Header section that we'll observe -->
+        <header ref="headerRef" class="mb-8">
           <h1 class="text-3xl md:text-4xl font-bold mb-3 leading-tight">
             {{ briefData.title }}
           </h1>
@@ -209,7 +223,63 @@ onUnmounted(() => {
           </div>
         </header>
 
-        <!-- Add ref="articleContentRef" here -->
+        <!-- Mobile TOC (Only visible on small screens) -->
+        <div class="xl:hidden mb-8">
+          <div
+            ref="mobileTocRef"
+            :class="[
+              'z-40 transition-all duration-200 ', // lower z-index to stay below reading indicator
+              isSticky ? 'fixed top-1 left-0 right-0' : 'relative', // top-1 to show reading indicator
+            ]"
+          >
+            <button
+              @click="mobileMenuOpen = !mobileMenuOpen"
+              class="w-full flex items-center justify-between px-6 py-3 text-sm font-semibold text-gray-700 dark:text-gray-300 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md transition-colors duration-200"
+            >
+              <span>{{ currentSectionName }}</span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                class="w-4 h-4 transform transition-transform duration-300 ease-in-out"
+                :class="{ 'rotate-180': mobileMenuOpen }"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </button>
+            <Transition
+              enter-active-class="transition-all duration-300 ease-out"
+              leave-active-class="transition-all duration-200 ease-in"
+              enter-from-class="opacity-0 -translate-y-4"
+              enter-to-class="opacity-100 translate-y-0"
+              leave-from-class="opacity-100 translate-y-0"
+              leave-to-class="opacity-0 -translate-y-4"
+            >
+              <div
+                v-if="mobileMenuOpen"
+                class="absolute left-0 right-0 bg-white dark:bg-gray-900 shadow-lg p-4 max-h-[60vh] overflow-y-auto"
+              >
+                <BriefTableOfContents
+                  :items="tocItems"
+                  :active-heading-id="activeHeadingId"
+                  @navigate="
+                    id => {
+                      scrollToSection(id);
+                      mobileMenuOpen = false;
+                    }
+                  "
+                  @active-heading-change="activeHeadingId = $event"
+                />
+              </div>
+            </Transition>
+          </div>
+        </div>
+
+        <!-- Main article content -->
         <article
           ref="articleContentRef"
           class="prose prose-slate dark:prose-invert dark:text-gray-300 w-full max-w-none"
@@ -260,7 +330,7 @@ onUnmounted(() => {
       :class="[
         TOC_WIDTH_CLASS,
         // Fixed distance from the left edge at larger screens
-        'top-24 left-[8vw]',
+        'top-24 right-[78%]',
       ]"
     >
       <ClientOnly>
@@ -272,6 +342,29 @@ onUnmounted(() => {
         />
       </ClientOnly>
     </aside>
+
+    <!-- Back to Top Button -->
+    <Transition
+      enter-active-class="transition-opacity duration-200"
+      leave-active-class="transition-opacity duration-200"
+      enter-from-class="opacity-0"
+      leave-to-class="opacity-0"
+    >
+      <button
+        v-show="showBackToTop"
+        @click="scrollToTop()"
+        class="fixed bottom-8 z-50 hover:cursor-pointer right-[max(2rem,calc((100%-68rem)/2))] p-3 rounded-full bg-black dark:bg-white text-white dark:text-black shadow-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors duration-200"
+        aria-label="Back to top"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+          <path
+            fill-rule="evenodd"
+            d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z"
+            clip-rule="evenodd"
+          />
+        </svg>
+      </button>
+    </Transition>
   </div>
 </template>
 

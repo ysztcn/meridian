@@ -14,23 +14,22 @@
         >
           <DisclosureButton
             :id="`toc-section-${item.id}`"
-            class="flex items-center justify-between w-full text-left text-sm transition-colors duration-150 focus:outline-none py-2 px-1 rounded hover:bg-gray-50 dark:hover:bg-gray-800"
+            class="flex items-center hover:cursor-pointer justify-between w-full text-left text-sm transition-colors duration-150 focus:outline-none py-2 px-1 rounded hover:bg-gray-50 dark:hover:bg-gray-800"
             :class="[
-              'hover:text-gray-900 dark:hover:text-gray-100', // Hover state
-              item.level === 2 ? 'pl-2' : 'pl-4', // Indentation based on level
+              'hover:text-gray-900 dark:hover:text-gray-100',
+              item.level === 2 ? 'pl-2' : 'pl-4',
               isSectionActive(item)
-                ? 'font-semibold text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-800/50' // Active section style
-                : 'text-gray-500 dark:text-gray-400', // Default/Inactive style
+                ? 'font-semibold text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-800/50'
+                : 'text-gray-500 dark:text-gray-400',
             ]"
             @click="toggleSection(item.id)"
           >
             <span class="break-words pr-2">{{ item.text }}</span>
-            <!-- Chevron icon for expand/collapse -->
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 20 20"
               fill="currentColor"
-              class="w-4 h-4 text-gray-500 dark:text-gray-400 transform transition-transform duration-200 ease-out flex-shrink-0"
+              class="w-4 h-4 text-gray-500 dark:text-gray-400 transform transition-transform duration-300 ease-in-out"
               :class="{ 'rotate-90': open }"
             >
               <path
@@ -41,11 +40,17 @@
             </svg>
           </DisclosureButton>
 
-          <transition name="slide">
+          <Transition
+            enter-active-class="transition-all duration-300 ease-out"
+            leave-active-class="transition-all duration-200 ease-in"
+            enter-from-class="opacity-0 -translate-y-4"
+            enter-to-class="opacity-100 translate-y-0"
+            leave-from-class="opacity-100 translate-y-0"
+            leave-to-class="opacity-0 -translate-y-4"
+          >
             <DisclosurePanel
               class="mt-1 space-y-1 active:border-none active:outline-none border-l border-gray-200 dark:border-gray-700 ml-1 pl-3 overflow-hidden"
             >
-              <!-- Indent topics further -->
               <ul>
                 <li v-for="topic in item.topics" :key="topic.id" class="ml-0 mb-1">
                   <NuxtLink
@@ -54,11 +59,11 @@
                     @click.prevent="$emit('navigate', topic.id)"
                     class="block text-sm hover:underline transition-colors duration-150 break-words py-1 px-1 rounded"
                     :class="[
-                      'hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800/50', // Hover state
+                      'hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800/50',
                       activeHeadingId === topic.id
-                        ? 'font-semibold text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-800/50' // Active topic style
-                        : 'text-gray-500 dark:text-gray-400', // Default/Inactive style
-                      'pl-2', // Indentation for topics
+                        ? 'font-semibold text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-800/50'
+                        : 'text-gray-500 dark:text-gray-400',
+                      'pl-2',
                     ]"
                   >
                     {{ topic.text }}
@@ -66,7 +71,7 @@
                 </li>
               </ul>
             </DisclosurePanel>
-          </transition>
+          </Transition>
         </Disclosure>
       </li>
     </ul>
@@ -323,15 +328,15 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-/* TOC container with overflow support */
 .toc-container {
-  max-height: 70vh;
+  max-height: calc(100vh - 8rem);
   overflow-y: auto;
   scrollbar-width: thin;
   position: relative;
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
 }
 
-/* Subtle scrollbar styling for WebKit browsers */
+/* Subtle scrollbar styling */
 .toc-container::-webkit-scrollbar {
   width: 5px;
 }
@@ -349,30 +354,17 @@ onUnmounted(() => {
   background-color: rgba(75, 85, 99, 0.5);
 }
 
-/* Headless UI focus styles handled via classes */
-.disclosure-btn:focus {
-  outline: 2px solid transparent;
-  outline-offset: 2px;
-}
-
 /* Smooth height transition for accordion */
 .slide-enter-active,
 .slide-leave-active {
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   max-height: 300px;
   overflow: hidden;
 }
+
 .slide-enter-from,
 .slide-leave-to {
   max-height: 0;
   opacity: 0;
-}
-
-/* Add subtle dividers between sections */
-li + li {
-  border-top: 1px solid rgba(229, 231, 235, 0.3);
-}
-.dark li + li {
-  border-top: 1px solid rgba(55, 65, 81, 0.3);
 }
 </style>
