@@ -280,11 +280,7 @@ onMounted(() => {
         </div>
 
         <!-- Main article content -->
-        <article
-          ref="articleContentRef"
-          class="prose prose-slate dark:prose-invert dark:text-gray-300 w-full max-w-none"
-          v-html="$md.render(briefData.content)"
-        />
+        <article ref="articleContentRef" class="prose w-full max-w-none" v-html="$md.render(briefData.content)" />
 
         <!-- Stats and Subscription Form -->
         <div class="mt-16 mb-8">
@@ -353,7 +349,7 @@ onMounted(() => {
       <button
         v-show="showBackToTop"
         @click="scrollToTop()"
-        class="fixed bottom-8 z-50 hover:cursor-pointer right-[max(2rem,calc((100%-68rem)/2))] p-3 rounded-full bg-black dark:bg-white text-white dark:text-black shadow-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors duration-200"
+        class="fixed bottom-8 z-50 border border-gray-200 dark:border-gray-950 hover:cursor-pointer right-[max(2rem,calc((100%-68rem)/2))] p-2 rounded-full bg-gray-100 dark:bg-gray-900 text-black dark:text-gray-100 shadow-lg hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors duration-200"
         aria-label="Back to top"
       >
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
