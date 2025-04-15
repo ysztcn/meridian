@@ -48,7 +48,7 @@ jobs:
         working-directory: 'packages/database'
 
       - name: Run database migrations
-        run: pnpm db:migrate
+        run: pnpm migrate
         working-directory: 'packages/database'
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}

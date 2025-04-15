@@ -77,7 +77,7 @@ git clone https://github.com/iliane5/meridian.git
 cd meridian
 pnpm install
 # Configure .env files
-pnpm --filter @meridian/database db:migrate
+pnpm --filter @meridian/database migrate
 # Deploy via Wrangler, run Python briefing notebook manually
 ```
 
