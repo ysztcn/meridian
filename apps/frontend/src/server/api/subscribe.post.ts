@@ -18,17 +18,15 @@ export default defineEventHandler(async event => {
     await Promise.all([
       getDb(config.DATABASE_URL).insert($newsletter).values({ email: bodyContent.data.email }).onConflictDoNothing(),
       (async () => {
-        if (config.mailerlite.api_key === undefined) {
-          return; // nothing if the API key is not set
+        if (config.mailerlite.api_key === undefined || config.mailerlite.group_id === undefined) {
+          console.warn('MailerLite is not configured');
+          return; // nothing if mailerlite is not configured
         }
         const mailerlite = new MailerLite({ api_key: config.mailerlite.api_key });
         try {
           await mailerlite.subscribers.createOrUpdate({
             email: bodyContent.data.email,
-            status: 'active',
-            opted_in_at: new Date().toISOString(),
-            subscribed_at: new Date().toISOString(),
-            groups: config.mailerlite.group_id ? [config.mailerlite.group_id] : [],
+            groups: [config.mailerlite.group_id],
           });
         } catch (error) {
           console.error('MailerLite error:', error);
