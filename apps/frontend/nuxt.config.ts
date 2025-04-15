@@ -40,7 +40,6 @@ export default defineNuxtConfig({
   srcDir: 'src',
 
   nitro: {
-    cloudflare: { nodeCompat: true, deployConfig: true },
     prerender: {
       autoSubfolderIndex: false,
     },
