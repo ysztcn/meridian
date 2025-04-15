@@ -45,6 +45,26 @@ export default defineNuxtConfig({
     },
   },
 
+  routeRules: {
+    // Cache the list of briefs for 1 hour on CDN, 15 mins in browser
+    // Allow serving stale data for up to a day while revalidating
+    '/api/briefs': {
+      cache: {
+        maxAge: 60 * 15, // 15 minutes browser cache
+        staleMaxAge: 60 * 60 * 24, // 1 day stale-while-revalidate on CDN
+      },
+    },
+    // Cache individual briefs for longer (assuming they don't change once published)
+    // Cache for 1 day on CDN, 1 hour in browser
+    '/api/briefs/**': {
+      // Matches /api/briefs/some-slug, /api/briefs/another-slug etc.
+      cache: {
+        maxAge: 60 * 60, // 1 hour browser cache
+        staleMaxAge: 60 * 60 * 24 * 7, // 1 week stale-while-revalidate on CDN
+      },
+    },
+  },
+
   colorMode: {
     classSuffix: '',
     preference: 'system',

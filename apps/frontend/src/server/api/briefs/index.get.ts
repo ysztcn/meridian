@@ -10,7 +10,7 @@ export default defineEventHandler(async event => {
   });
 
   // Process reports to add date and slug
-  const processedReports = reports.map(report => {
+  return reports.map(report => {
     const createdAt = ensureDate(report.createdAt);
     return {
       ...report,
@@ -18,6 +18,4 @@ export default defineEventHandler(async event => {
       slug: generateReportSlug(createdAt),
     };
   });
-
-  return processedReports;
 });
