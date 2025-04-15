@@ -22,13 +22,18 @@ export default defineEventHandler(async event => {
           return; // nothing if the API key is not set
         }
         const mailerlite = new MailerLite({ api_key: config.mailerlite.api_key });
-        await mailerlite.subscribers.createOrUpdate({
-          email: bodyContent.data.email,
-          status: 'active',
-          opted_in_at: new Date().toISOString(),
-          subscribed_at: new Date().toISOString(),
-          groups: config.mailerlite.group_id ? [config.mailerlite.group_id] : [],
-        });
+        try {
+          await mailerlite.subscribers.createOrUpdate({
+            email: bodyContent.data.email,
+            status: 'active',
+            opted_in_at: new Date().toISOString(),
+            subscribed_at: new Date().toISOString(),
+            groups: config.mailerlite.group_id ? [config.mailerlite.group_id] : [],
+          });
+        } catch (error) {
+          console.error('MailerLite error:', error);
+          throw createError({ statusCode: 500, statusMessage: 'MailerLite error' });
+        }
       })(),
     ]);
 
