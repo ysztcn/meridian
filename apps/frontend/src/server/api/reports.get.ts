@@ -1,4 +1,5 @@
 import { getDb } from '@meridian/database';
+import { ensureDate, formatReportDate, generateReportSlug } from '~/server/lib/utils';
 
 export default defineEventHandler(async event => {
   const db = getDb(useRuntimeConfig(event).DATABASE_URL);
@@ -7,32 +8,11 @@ export default defineEventHandler(async event => {
   // Process reports to add date and slug
   const processedReports = reports
     .map(report => {
-      // Ensure createdAt is a valid Date object and work with UTC
-      const createdAt = report.createdAt ? new Date(report.createdAt) : new Date();
-
-      // Use UTC methods to avoid timezone issues
-      const monthNames = [
-        'January',
-        'February',
-        'March',
-        'April',
-        'May',
-        'June',
-        'July',
-        'August',
-        'September',
-        'October',
-        'November',
-        'December',
-      ];
-      const month = monthNames[createdAt.getUTCMonth()];
-      const day = createdAt.getUTCDate();
-      const year = createdAt.getUTCFullYear();
-
+      const createdAt = ensureDate(report.createdAt);
       return {
         ...report,
-        date: { month, day, year },
-        slug: `${month.toLowerCase()}-${day}-${year}`,
+        date: formatReportDate(createdAt),
+        slug: generateReportSlug(createdAt),
       };
     })
     .sort((a, b) => {

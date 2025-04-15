@@ -15,10 +15,17 @@ export default defineNuxtConfig({
     },
   },
 
-  compatibilityDate: '2024-11-01',
-  devtools: { enabled: true },
-  css: ['~/assets/css/main.css'],
+  modules: ['@nuxtjs/color-mode'],
 
+  compatibilityDate: '2024-11-01',
+  devtools: {
+    enabled: true,
+  },
+  devServer: {
+    host: '0.0.0.0',
+  },
+
+  css: ['~/assets/css/main.css'],
   vite: {
     plugins: [tailwindcss()],
   },
@@ -30,10 +37,6 @@ export default defineNuxtConfig({
     DATABASE_URL: '',
   },
 
-  devServer: {
-    host: '0.0.0.0',
-  },
-
   srcDir: 'src',
 
   nitro: {
@@ -41,8 +44,6 @@ export default defineNuxtConfig({
       autoSubfolderIndex: false,
     },
   },
-
-  modules: ['@nuxtjs/color-mode'],
 
   colorMode: {
     classSuffix: '',

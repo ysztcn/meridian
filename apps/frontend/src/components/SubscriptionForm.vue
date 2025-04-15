@@ -1,15 +1,20 @@
 <script setup lang="ts">
-const STORAGE_KEY = 'meridian_subscribed';
+const COOKIE_NAME = 'meridian_subscribed';
+const LEGACY_STORAGE_KEY = 'meridian_subscribed';
 
 // Subscription state
 const email = ref('');
 const isSubmitting = ref(false);
-const hasSubscribed = ref(false);
+const errorMessage = ref('');
+const hasSubscribed = useCookie<string | null>(COOKIE_NAME);
 
-// Lifecycle hooks
+// Migrate old localStorage data if it exists
 onMounted(() => {
-  // Check subscription status
-  hasSubscribed.value = localStorage.getItem(STORAGE_KEY) === 'true';
+  const legacyValue = localStorage.getItem(LEGACY_STORAGE_KEY);
+  if (legacyValue === 'true' && !hasSubscribed.value) {
+    hasSubscribed.value = 'true';
+    localStorage.removeItem(LEGACY_STORAGE_KEY);
+  }
 });
 
 /**
@@ -17,6 +22,7 @@ onMounted(() => {
  */
 const handleSubmit = async () => {
   isSubmitting.value = true;
+  errorMessage.value = '';
 
   try {
     const response = await $fetch('/api/subscribe', {
@@ -29,10 +35,9 @@ const handleSubmit = async () => {
     }
 
     email.value = '';
-    hasSubscribed.value = true;
-    localStorage.setItem(STORAGE_KEY, 'true');
-  } catch (error) {
-    alert('Something went wrong, please try again.');
+    hasSubscribed.value = 'true';
+  } catch (error: unknown) {
+    errorMessage.value = error instanceof Error ? error.message : 'Something went wrong, please try again.';
     console.error('Subscription error:', error);
   } finally {
     isSubmitting.value = false;
@@ -40,8 +45,8 @@ const handleSubmit = async () => {
 };
 
 const handleChangeEmail = () => {
-  hasSubscribed.value = false;
-  localStorage.removeItem(STORAGE_KEY);
+  hasSubscribed.value = null;
+  errorMessage.value = '';
 };
 </script>
 
@@ -49,21 +54,28 @@ const handleChangeEmail = () => {
   <div>
     <div v-if="!hasSubscribed" class="gap-2 text-sm flex flex-col items-center">
       <p>Want this brief in your inbox? Sign up for updates</p>
-      <form @submit.prevent="handleSubmit" class="flex group max-w-md border border-zinc-300 mx-auto">
-        <input
-          v-model="email"
-          type="email"
-          placeholder="your@email.com"
-          required
-          class="flex-grow px-4 py-2 focus:outline-zinc-400"
-        />
-        <button
-          type="submit"
-          class="bg-zinc-300 text-zinc-700 hover:cursor-pointer px-4 py-2 font-medium hover:bg-zinc-400 dark:hover:bg-zinc-400 transition-colors"
-          :disabled="isSubmitting"
-        >
-          {{ isSubmitting ? 'Sending...' : 'Subscribe' }}
-        </button>
+      <form @submit.prevent="handleSubmit" class="flex flex-col group max-w-md mx-auto">
+        <div class="flex border border-zinc-300">
+          <input
+            v-model="email"
+            type="email"
+            placeholder="your@email.com"
+            required
+            :aria-invalid="!!errorMessage"
+            aria-describedby="subscription-error"
+            class="flex-grow px-4 py-2 focus:outline-zinc-400"
+          />
+          <button
+            type="submit"
+            class="bg-zinc-300 text-zinc-700 hover:cursor-pointer px-4 py-2 font-medium hover:bg-zinc-400 dark:hover:bg-zinc-400 transition-colors"
+            :disabled="isSubmitting"
+          >
+            {{ isSubmitting ? 'Sending...' : 'Subscribe' }}
+          </button>
+        </div>
+        <div v-if="errorMessage" id="subscription-error" class="text-red-600 text-xs mt-2" role="alert">
+          {{ errorMessage }}
+        </div>
       </form>
     </div>
     <div v-else class="text-center text-sm">

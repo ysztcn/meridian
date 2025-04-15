@@ -5,13 +5,7 @@
       <!-- Loop through structured TOC items -->
       <li v-for="item in structuredItems" :key="item.id" class="ml-0">
         <!-- Section Title (H2/H3) - Using Headless UI Disclosure -->
-        <Disclosure
-          v-if="item.isSection"
-          :defaultOpen="expandedSections[item.id]"
-          as="div"
-          v-slot="{ open }"
-          :key="expandedSections[item.id]"
-        >
+        <Disclosure v-if="item.isSection" :defaultOpen="expandedSections[item.id]" as="div" v-slot="{ open }">
           <DisclosureButton
             :id="`toc-section-${item.id}`"
             class="flex items-center hover:cursor-pointer justify-between w-full text-left text-sm transition-colors duration-150 focus:outline-none py-2 px-1 rounded hover:bg-gray-50 dark:hover:bg-gray-800"
@@ -169,6 +163,7 @@ const scrollActiveTocItemIntoView = (headingId: string, isImmediate = false) => 
     if (element) {
       // Check if element is outside view
       const container = tocContainer.value;
+      if (!container) return;
       const containerRect = container.getBoundingClientRect();
       const elementRect = element.getBoundingClientRect();
 
@@ -270,7 +265,7 @@ const observerCallback: IntersectionObserverCallback = entries => {
   });
 
   if (topIntersectingEntry) {
-    const newActiveId = topIntersectingEntry.target.id;
+    const newActiveId = (topIntersectingEntry as IntersectionObserverEntry).target.id;
     setActiveHeading(newActiveId);
   }
 };

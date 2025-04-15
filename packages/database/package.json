@@ -15,8 +15,9 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "db:migrate": "drizzle-kit migrate",
+    "migrate": "drizzle-kit migrate",
     "generate": "drizzle-kit generate",
+    "studio": "drizzle-kit studio",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

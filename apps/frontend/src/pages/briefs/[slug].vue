@@ -1,203 +1,87 @@
 <script lang="ts" setup>
-const config = useRuntimeConfig();
-const { $md } = useNuxtApp();
+import type { Brief } from '~/shared/types';
 
-// Constants
+// Constants (Consider moving to config or keeping here if page-specific)
 const WORDS_PER_MINUTE = 300;
-const HEADER_OFFSET = 80; // Offset for smooth scrolling below fixed headers
-const TOC_WIDTH_CLASS = 'w-64'; // Define TOC width here (e.g., w-56, w-64, w-72) - corresponds to 16rem/17rem/18rem
-const MAIN_CONTENT_MAX_W_CLASS = 'max-w-3xl'; // Matches your app.vue layout
+const HEADER_OFFSET = 80; // Used by TOC composable
+const TOC_WIDTH_CLASS = 'w-64'; // Keep for template styling
 
-// Route and brief data extraction (Ensure your getReportBySlug handles async correctly or use useFetch/useAsyncData)
-const slug = useRoute().path.split('/').pop()?.replaceAll('_', '/');
-if (slug === undefined) {
-  throw createError({ statusCode: 404, statusMessage: 'Brief not found' });
+// Config & Route
+const config = useRuntimeConfig();
+const route = useRoute();
+const slug = route.path.split('/').pop()?.replaceAll('_', '/'); // Keep original logic for slug
+
+if (!slug) {
+  throw createError({ statusCode: 404, statusMessage: 'Brief slug not found in path' });
 }
-// Using useAsyncData for potentially async data fetching
-const briefData = getReportBySlug(slug);
 
-// Reading progress state
-const readingProgress = ref(0);
-let scrollListener: () => void;
+// Data Fetching
+// Note: useFetch handles async data fetching correctly within <script setup>
+const { data: briefRawData, error: briefError } = await useFetch<Brief>(`/api/briefs/${slug}`);
 
-// Estimate Reading Time
-const estimateReadingTime = (content: string): number => {
+// Error Handling & Data Processing
+if (briefError.value) {
+  console.error('Error fetching brief:', briefError.value);
+  // Consider more specific error mapping based on briefError.value.statusCode if available
+  throw createError({ statusCode: briefError.value.statusCode || 500, statusMessage: 'Error fetching brief data.' });
+}
+if (!briefRawData.value) {
+  throw createError({ statusCode: 404, statusMessage: 'Brief not found.' });
+}
+
+// Ensure reactivity and process date
+const briefData = toRef({
+  ...briefRawData.value,
+  createdAt: new Date(briefRawData.value.createdAt),
+  // Add reading time calculation here, needs the 'content' field
+  readingTime: estimateReadingTime(briefRawData.value.content || ''), // Assuming content field exists
+});
+
+// Reading Time Estimation Function (Keep here or move to a utils file)
+function estimateReadingTime(content: string): number {
   if (!content) return 0;
   const wordCount = content.trim().split(/\s+/).length;
   return Math.ceil(wordCount / WORDS_PER_MINUTE);
-};
+}
 
-// --- TOC Logic ---
-interface TocItem {
-  id: string;
-  text: string;
-  level: number;
-} // isUnderlined removed for now
-const tocItems = ref<TocItem[]>([]);
-const articleContentRef = ref<HTMLElement | null>(null);
-const activeHeadingId = ref<string | null>(null);
-const mobileMenuOpen = ref(false);
-const currentSectionName = ref<string>('on this page');
+// --- Template Refs ---
+const articleContentRef = ref<HTMLElement | null>(null); // For TOC and reading time content source
+const headerRef = ref<HTMLElement | null>(null); // For sticky detection
+const mobileTocRef = ref<HTMLElement | null>(null); // Potentially for mobile menu interaction/styling
+const mobileMenuOpen = ref(false); // Mobile TOC menu state
 
-const generateSlug = (text: string): string => {
-  return text
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .trim()
-    .replace(/\s+/g, '-')
-    .slice(0, 50);
-};
+// --- Instantiate Composables ---
+const { readingProgress, showBackToTop, scrollToTop } = useReadingProgress();
+const { tocItems, activeHeadingId, currentSectionName, scrollToSection } = useTableOfContents({
+  contentRef: articleContentRef,
+  headerOffset: HEADER_OFFSET,
+  // selectors: 'h2, h3, u > strong' // Default is usually fine
+});
+const { isSticky } = useStickyElement(headerRef); // Observe the header element directly
 
-const generateToc = () => {
-  if (!articleContentRef.value) return;
-
-  // Query all potential TOC elements: H2, H3, and the specific topic structure
-  // IMPORTANT: Adjust 'u > strong' if the LLM output format differs!
-  const elements = articleContentRef.value.querySelectorAll('h2, h3, u > strong');
-  const newTocItems: TocItem[] = [];
-
-  elements.forEach((el, index) => {
-    let level: number;
-    let text = el.textContent?.trim() || '';
-    let targetElement: HTMLElement = el as HTMLElement; // Default to the element itself
-
-    // Determine level and potentially adjust target element for topics
-    if (el.tagName === 'H2') {
-      level = 2;
-    } else if (el.tagName === 'H3') {
-      level = 3;
-    } else if (el.tagName === 'STRONG' && el.parentElement?.tagName === 'U') {
-      // This is a topic title (<u><strong>...</strong></u>)
-      level = 5; // Assign a higher level for topics
-      // Target the parent <u> tag for ID and scrolling
-      targetElement = el.parentElement;
-    } else {
-      return; // Skip if it's not a recognized TOC element
-    }
-
-    const id = `${level === 5 ? 'topic' : 'section'}-${index}-${generateSlug(text)}`;
-
-    if (text && targetElement) {
-      targetElement.id = id; // Assign ID to the H-tag or the <u> tag
-      newTocItems.push({ id, text, level });
-    }
-  });
-
-  tocItems.value = newTocItems; // This flat list is passed to the component
-};
-
-// Scroll to section with offset
-const scrollToSection = (id: string) => {
-  const el = document.getElementById(id);
-  if (el) {
-    const elementPosition = el.getBoundingClientRect().top;
-    const offsetPosition = elementPosition + window.pageYOffset - HEADER_OFFSET;
-    window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
-  }
-};
-
-const scrollToTop = () => {
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-};
-
-// SEO metadata
+// --- SEO Metadata ---
 const formatDate = computed(() => {
-  // Add safety checks for briefData and date
-  const date = briefData.value?.date;
-  return date && date.month ? `${date.month.toLowerCase()} ${date.day}, ${date.year}` : 'Unknown Date';
+  const date = briefData.value?.date; // Assuming 'date' object exists as per original
+  return date?.month ? `${date.month.toLowerCase()} ${date.day}, ${date.year}` : 'Unknown Date';
 });
 
-// Use useSeoMeta for Nuxt 3 SEO
+// Use useSeoMeta - Ensure data exists and provide fallbacks
 useSeoMeta({
   title: `${briefData.value?.title?.toLowerCase() ?? 'Brief'} | meridian`,
-  description: `Intelligence brief for ${formatDate.value}`,
+  description: `Intelligence brief for ${formatDate.value}`, // Use computed date
   ogTitle: `${briefData.value?.title ?? 'Intelligence Brief'}`,
-  ogDescription: `Intelligence brief for ${formatDate.value}`,
-  // Ensure data for OG image exists, provide fallbacks
-  ogImage: briefData.value
+  ogDescription: `Intelligence brief for ${formatDate.value}`, // Use computed date
+  ogImage: briefData.value?.title // Check if title exists before constructing URL
     ? `${config.public.WORKER_API}/openGraph/brief?title=${encodeURIComponent(briefData.value.title)}&date=${encodeURIComponent(briefData.value.createdAt?.getTime() ?? Date.now())}&articles=${briefData.value.usedArticles ?? 0}&sources=${briefData.value.usedSources ?? 0}`
-    : '/default-og-image.png', // Add a default OG image
-  ogUrl: `https://news.iliane.xyz/briefs/${slug}`, // Ensure your base URL is correct
+    : '/default-og-image.png', // Fallback OG image
+  ogUrl: `https://news.iliane.xyz/briefs/${slug}`, // Ensure base URL is correct
   twitterCard: 'summary_large_image',
-});
-
-// Add this function near the other TOC-related functions
-const updateCurrentSection = (headingId: string | null) => {
-  if (!headingId) {
-    currentSectionName.value = 'on this page';
-    return;
-  }
-
-  // Find the current section or topic
-  const section = tocItems.value.find(item => {
-    if (item.id === headingId) return true;
-    // For topics, check if they're under a section
-    if (item.level > 3) {
-      const parentSection = tocItems.value.find(section => section.level <= 3 && section.id === headingId);
-      return parentSection !== undefined;
-    }
-    return false;
-  });
-
-  currentSectionName.value = section ? section.text.toLowerCase() : 'on this page';
-};
-
-// Update the watch for activeHeadingId
-watch(
-  () => activeHeadingId.value,
-  newId => {
-    updateCurrentSection(newId);
-  },
-  { immediate: true }
-);
-
-// Add these refs with the other state management
-const headerRef = ref<HTMLElement | null>(null);
-const mobileTocRef = ref<HTMLElement | null>(null);
-const isSticky = ref(false);
-const showBackToTop = ref(false);
-
-// Add this with the other lifecycle hooks
-onMounted(() => {
-  // Scroll progress tracking
-  scrollListener = () => {
-    const scrollTop = document.documentElement.scrollTop;
-    const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-    readingProgress.value = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
-
-    // Show back to top button after scrolling down 500px
-    showBackToTop.value = scrollTop > 500;
-  };
-  window.addEventListener('scroll', scrollListener);
-
-  // Generate TOC after initial render ensures elements exist
-  nextTick(() => {
-    generateToc();
-  });
-
-  // Setup intersection observer for sticky behavior
-  const observer = new IntersectionObserver(
-    ([entry]) => {
-      isSticky.value = !entry.isIntersecting;
-    },
-    { threshold: 0 }
-  );
-
-  if (headerRef.value) {
-    observer.observe(headerRef.value);
-  }
-
-  // Cleanup
-  onUnmounted(() => {
-    window.removeEventListener('scroll', scrollListener);
-    observer.disconnect();
-  });
 });
 </script>
 
 <template>
   <!-- Reading progress bar -->
-  <div class="fixed top-0 left-0 w-full h-1 z-50">
+  <div class="fixed top-0 left-0 w-full bg-white dark:bg-gray-900 h-1 z-50">
     <div
       class="h-full bg-black dark:bg-white transition-all duration-150 ease-out"
       :style="{ width: `${readingProgress}%` }"
@@ -224,7 +108,7 @@ onMounted(() => {
         </header>
 
         <!-- Mobile TOC (Only visible on small screens) -->
-        <div class="xl:hidden mb-8">
+        <div class="xl:hidden mb-8" v-if="tocItems.length > 0">
           <div
             ref="mobileTocRef"
             :class="[
@@ -322,6 +206,7 @@ onMounted(() => {
 
     <!-- Desktop TOC - Positioned absolutely to the left of the content -->
     <aside
+      v-if="tocItems.length > 0"
       class="hidden xl:block fixed max-h-[calc(100vh-8rem)] overflow-y-auto pr-8"
       :class="[
         TOC_WIDTH_CLASS,

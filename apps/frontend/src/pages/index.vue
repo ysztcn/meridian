@@ -4,9 +4,6 @@ import SubscriptionForm from '../components/SubscriptionForm.vue';
 const { $md } = useNuxtApp();
 const config = useRuntimeConfig();
 
-// Constants
-const STORAGE_KEY = 'meridian_subscribed';
-
 const text = ref(
   `
 ## what is this?
@@ -36,21 +33,12 @@ just what's happening and why it matters. no middleman deciding what reaches me.
 `.trim()
 );
 
-// Subscription state
-const hasSubscribed = ref(false);
-
 useSEO({
   title: 'home | meridian',
   description:
     'a daily brief of everything important happening that i care about, with actual analysis beyond headlines',
   ogImage: `${config.public.WORKER_API}/openGraph/default`,
   ogUrl: `https://news.iliane.xyz/`,
-});
-
-// Lifecycle hooks
-onMounted(() => {
-  // Check subscription status
-  hasSubscribed.value = localStorage.getItem(STORAGE_KEY) === 'true';
 });
 </script>
 
