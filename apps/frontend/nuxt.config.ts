@@ -17,7 +17,7 @@ export default defineNuxtConfig({
 
   modules: ['@nuxtjs/color-mode'],
 
-  compatibilityDate: '2024-11-01',
+  compatibilityDate: '2025-03-01',
   devtools: {
     enabled: true,
   },
@@ -40,6 +40,7 @@ export default defineNuxtConfig({
   srcDir: 'src',
 
   nitro: {
+    cloudflare: { nodeCompat: true, deployConfig: true },
     prerender: {
       autoSubfolderIndex: false,
     },
