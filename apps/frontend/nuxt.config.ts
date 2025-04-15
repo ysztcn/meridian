@@ -35,6 +35,10 @@ export default defineNuxtConfig({
       WORKER_API: 'http://localhost:8787',
     },
     DATABASE_URL: '',
+    mailerlite: {
+      api_key: '',
+      group_id: '',
+    },
   },
 
   srcDir: 'src',
