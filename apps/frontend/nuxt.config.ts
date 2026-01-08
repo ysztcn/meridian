@@ -5,49 +5,20 @@ export default defineNuxtConfig({
   app: {
     head: {
       htmlAttrs: { lang: 'en' },
-      link: [
-        {
-          rel: 'icon',
-          type: 'image/png',
-          href: '/favicon.ico',
-        },
-      ],
+      link: [{ rel: 'icon', type: 'image/png', href: '/favicon.ico' }],
     },
   },
 
-  modules: ['@nuxtjs/color-mode'],
-
+  colorMode: { classSuffix: '', preference: 'system', fallback: 'system' },
   compatibilityDate: '2025-03-01',
-  devtools: {
-    enabled: true,
-  },
-  devServer: {
-    host: '0.0.0.0',
-  },
-
   css: ['~/assets/css/main.css'],
-  vite: {
-    plugins: [tailwindcss()],
-  },
 
-  runtimeConfig: {
-    public: {
-      WORKER_API: 'http://localhost:8787',
-    },
-    DATABASE_URL: '',
-    mailerlite: {
-      api_key: '',
-      group_id: '',
-    },
-  },
+  devtools: { enabled: true },
+  devServer: { host: '0.0.0.0' },
 
-  srcDir: 'src',
+  modules: ['@nuxtjs/color-mode', 'nuxt-auth-utils', '@nuxt/eslint'],
 
-  nitro: {
-    prerender: {
-      autoSubfolderIndex: false,
-    },
-  },
+  nitro: { prerender: { autoSubfolderIndex: false }, cloudflare: { nodeCompat: true, deployConfig: true } },
 
   routeRules: {
     // Cache the list of briefs for 1 hour on CDN, 15 mins in browser
@@ -69,9 +40,19 @@ export default defineNuxtConfig({
     },
   },
 
-  colorMode: {
-    classSuffix: '',
-    preference: 'system',
-    fallback: 'system',
+  // In production, these are set via the environment variables
+  // NUXT_+{key}
+  runtimeConfig: {
+    database: { url: '' }, // NUXT_DATABASE_URL
+    mailerlite: { api_key: '', group_id: '' }, // NUXT_MAILERLITE_API_KEY, NUXT_MAILERLITE_GROUP_ID
+    admin: { username: 'admin', password: 'hunter2' }, // NUXT_ADMIN_USERNAME, NUXT_ADMIN_PASSWORD
+    worker: { api_token: 'hunter2' }, // NUXT_WORKER_API_TOKEN
+
+    // IMPORTANT: all "public" config is exposed to the client
+    public: { WORKER_API: 'http://localhost:8787' }, // NUXT_PUBLIC_WORKER_API
   },
+
+  srcDir: 'src',
+
+  vite: { plugins: [tailwindcss()] },
 });

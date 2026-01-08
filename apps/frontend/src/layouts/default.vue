@@ -14,21 +14,24 @@ import { SunIcon, MoonIcon } from '@heroicons/vue/20/solid';
             <li>
               <NuxtLink class="hover:underline" active-class="underline" to="/briefs"> briefs </NuxtLink>
             </li>
+            <li v-if="useUserSession().loggedIn.value">
+              <NuxtLink class="hover:underline" active-class="underline" to="/admin"> admin </NuxtLink>
+            </li>
           </div>
           <ClientOnly>
             <button
-              class="hover:cursor-pointer"
               v-if="$colorMode.value === 'dark'"
-              @click="$colorMode.preference = 'light'"
+              class="hover:cursor-pointer"
               aria-label="Switch to light mode"
+              @click="$colorMode.preference = 'light'"
             >
               <SunIcon class="w-5 h-5 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-600" />
             </button>
             <button
-              class="hover:cursor-pointer"
               v-if="$colorMode.value === 'light'"
-              @click="$colorMode.preference = 'dark'"
+              class="hover:cursor-pointer"
               aria-label="Switch to dark mode"
+              @click="$colorMode.preference = 'dark'"
             >
               <MoonIcon class="w-5 h-5 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-600" />
             </button>
